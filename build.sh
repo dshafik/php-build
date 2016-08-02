@@ -54,6 +54,11 @@ function run {
 	move_files $VERSION
 
 	msg_success "Build completed for php-$VERSION!"
+
+	read_next_ver
+	update_news_next_ver $ROOT_BRANCH "$DATE" $NEXT_VERSION
+	commit_news_next_ver $NEXT_VERSION
+	push_branches $ROOT_BRANCH
 }
 
 function read_version {
@@ -295,6 +300,27 @@ function move_files {
 	msg_info -n "Copying packages and signatures: "
 	cp -R php-$1.tar.* /php-build
 	msg_info "done"
+}
+
+function read_next_ver {
+	msg -n "Next PHP Version to build (e.g. 7.1.0beta2): "
+	read NEXT_VERSION
+}
+
+function update_news_next_ver {
+	local YEAR=$(date -d "+2 weeks" "+%Y")
+	git checkout $1
+	msg -n "Updating NEWS: "
+	sed -i "s/^?? ???/$2/" NEWS
+	awk "NR==3{print \"?? ??? $YEAR, PHP $3\n\n\n\"}7" NEWS > TMPNEWS
+	mv TMPNEWS NEWS
+	msg_success "done!"
+}
+
+function commit_news_next_ver {
+	msg "Committing:"
+	git add NEWS
+	git commit -a -m "Update NEWS for $1"
 }
 
 function msg_with_color {
