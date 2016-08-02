@@ -20,7 +20,6 @@ function run {
 	clone_php
 
 	find_branch $VERSION
-
 	# This function call creates VERSION_* variables
 	get_version $VERSION
 
@@ -29,26 +28,21 @@ function run {
 	update_version \
 		$VERSION_MAJOR $VERSION_MINOR $VERSION_MICRO \
 		$VERSION_EXTRA $VERSION_EXTRA_VERSION $VERSION_ID
-
 	update_news "$DATE"
-
 	commit_updates $VERSION
 
 	compile_php
-
 	run_tests
 
 	# We do this after the tests so it is more visible
 	compare_version $VERSION
 
 	tag_release $GPG_KEY $VERSION
-
 	push_branches $ROOT_BRANCH $RELEASE_BRANCH $TAG_NAME
 
 	make_dist $VERSION
 
 	gen_verify_stub $VERSION
-
 	gen_md5_stub $VERSION
 
 	move_files $VERSION
