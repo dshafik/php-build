@@ -147,24 +147,33 @@ function clone_php {
 
 function find_branch {
 	local VERSION=$(echo $1 | cut -c 1-3)
-	ROOT_BRANCH="PHP-$VERSION"
-	git branch -a | grep -q "remotes/origin/$ROOT_BRANCH$"
+	BRANCH_DEFAULT="PHP-$VERSION"
+	git branch -a | grep -q "remotes/origin/$BRANCH_DEFAULT$"
 	if [[ $? -ne 0 ]]
 	then
-		msg_error "Branch \"$ROOT_BRANCH\" not found!"
-		msg_info -n "Do you want to use master? [y/N]: "
-		read USE_MASTER
-		USE_MASTER=$(echo $USE_MASTER | tr "[:upper:]" "[:lower:]")
-		if [[ -z $USE_MASTER || $USE_MASTER == n* ]]
-		then
-			msg_error "Bailing out..."
-			exit -1
-		fi
-		msg_info "Using master"
-	else
-		msg_success "Switching to branch $ROOT_BRANCH: "
-		git checkout $ROOT_BRANCH
+		BRANCH_DEFAULT="master"
 	fi
+
+	msg_info -n "Which branch should be used to build from? [$BRANCH_DEFAULT]"
+	read USE_BRANCH_DEFAULT
+
+	if [[ -z $USE_BRANCH_DEFAULT ]]
+	then
+		USE_BRANCH_DEFAULT=BRANCH_DEFAULT
+	fi
+
+	git branch -a | grep -q "remotes/origin/$USE_BRANCH_DEFAULT$"
+	if [[ $? -ne 0 ]]
+	then
+		msg_error "Branch \"$USE_BRANCH_DEFAULT\" not found."
+		msg_error "Bailing out..."
+		exit -1
+	fi
+
+	ROOT_BRANCH=USE_BRANCH_DEFAULT
+
+	msg_success "Switching to branch $ROOT_BRANCH: "
+	git checkout $ROOT_BRANCH
 }
 
 function get_version {
