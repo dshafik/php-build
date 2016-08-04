@@ -205,7 +205,7 @@ function update_version {
 	sed -i "s/^PHP_MAJOR_VERSION=[0-9]\+$/PHP_MAJOR_VERSION=$1/g" configure.in
 	sed -i "s/^PHP_MINOR_VERSION=[0-9]\+$/PHP_MINOR_VERSION=$2/g" configure.in
 	sed -i "s/^PHP_RELEASE_VERSION=[0-9]\+$/PHP_RELEASE_VERSION=$3/g" configure.in
-	sed -i "s/^PHP_EXTRA_VERSION=\".\+\"$/PHP_EXTRA_VERSION=$4$5/g" configure.in
+	sed -i "s/^PHP_EXTRA_VERSION=\".\+\"$/PHP_EXTRA_VERSION=\"$4$5\"/g" configure.in
 	msg_success "done!"
 }
 
