@@ -21,4 +21,5 @@ ENV GNUPGHOME=/secure/.gnupg
 VOLUME ["/secure/.ssh", "/secure/.gnupg", "/php-build"]
 
 COPY ./build.sh /build.sh
+COPY ./config.env /config.env
 CMD ["/build.sh"]

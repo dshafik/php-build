@@ -4,6 +4,11 @@ function ctrl_c() {
 	exit -2
 }
 
+if [[ -f /config.env ]]
+then
+	source /config.env
+fi
+
 function run {
 	read_version
 	read_date
@@ -12,7 +17,7 @@ function run {
 	read_ssh_key
 
 	msg_success "Building Version: $VERSION"
-	set_committer "$COMMITER_NAME" $COMMITER_EMAIL
+	set_committer "$COMMITTER_NAME" $COMMITTER_EMAIL
 	check_date "$DATE"
 	check_gpg $GPG_KEY
 	check_ssh_key $SSH_KEY
@@ -57,32 +62,46 @@ function run {
 	push_branches $ROOT_BRANCH
 }
 
+function read_with_default {
+	msg -n "$2"
+	if [[ ! -z $3 ]]
+	then
+		msg -n " [$3]"
+	fi
+	msg -n ": "
+
+	read READ_VALUE
+
+	if [[ -z $READ_VALUE ]]
+	then
+		READ_VALUE=$3
+	fi
+
+	local __RESULT_VAR=$1
+	eval $__RESULT_VAR="'$READ_VALUE'"
+}
+
 function read_version {
 	msg -n "PHP Version to build (e.g. 7.1.0beta2): "
 	read VERSION
 }
 
 function read_date {
-	DATE=$(date -d "+2 days" "+%d %b")
-	msg -n "Release Date: [$DATE] "
-	read DATE
+	local DEFAULT_DATE=$(date -d "+2 days" "+%d %b")
+	read_with_default DATE "Release Date" "$DEFAULT_DATE"
 }
 
 function read_committer {
-	msg -n "Name: "
-	read COMMITER_NAME
-	msg -n "Email Address: "
-	read COMMITER_EMAIL
+	read_with_default COMMITTER_NAME "Name" "$COMMITTER_NAME"
+	read_with_default COMMITTER_EMAIL "Email Address" "$COMMITTER_EMAIL"
 }
 
 function read_gpg {
-		msg -n "GPG Key Fingerprint: "
-		read GPG_KEY
+	read_with_default GPG_KEY "GPG Key Fingerprint" $GPG_KEY
 }
 
 function read_ssh_key {
-	msg -n "SSH Key [id_rsa]: "
-	read SSH_KEY
+	read_with_default SSH_KEY "SSH Key" ${SSH_KEY:-id_rsa}
 }
 
 function check_date {
@@ -93,7 +112,7 @@ function check_date {
 function set_committer {
 	msg_info "Setting committer to: $1 <$2>"
 	git config --global user.name "$1"
-  git config --global user.email $2
+	git config --global user.email "$2"
 }
 
 function check_ssh_key {
@@ -141,7 +160,12 @@ function check_gpg {
 }
 
 function clone_php {
-	git clone git@git.php.net:php-src.git
+	if [[ -z $REPO_URL ]]
+	then
+		REPO_URL="git@git.php.net:php-src.git"
+	fi
+	msg_info "Using repo: $REPO_URL"
+	git clone $REPO_URL
 	cd php-src
 }
 
@@ -154,8 +178,7 @@ function find_branch {
 		BRANCH_DEFAULT="master"
 	fi
 
-	msg_info -n "Which branch should be used to build from? [$BRANCH_DEFAULT]"
-	read USE_BRANCH_DEFAULT
+	read_with_default USE_BRANCH_DEFAULT "Which branch should be used to build from?" "$BRANCH_DEFAULT"
 
 	if [[ -z $USE_BRANCH_DEFAULT ]]
 	then
@@ -170,7 +193,7 @@ function find_branch {
 		exit -1
 	fi
 
-	ROOT_BRANCH=USE_BRANCH_DEFAULT
+	ROOT_BRANCH=$USE_BRANCH_DEFAULT
 
 	msg_success "Switching to branch $ROOT_BRANCH: "
 	git checkout $ROOT_BRANCH
