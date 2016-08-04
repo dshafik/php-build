@@ -29,6 +29,7 @@ function run {
 		$VERSION_MAJOR $VERSION_MINOR $VERSION_MICRO \
 		$VERSION_EXTRA $VERSION_EXTRA_VERSION $VERSION_ID
 	update_news "$DATE"
+	verify_changes
 	commit_updates $VERSION
 
 	compile_php
@@ -51,6 +52,7 @@ function run {
 
 	read_next_ver
 	update_news_next_ver $ROOT_BRANCH "$DATE" $NEXT_VERSION
+	verify_changes
 	commit_news_next_ver $NEXT_VERSION
 	push_branches $ROOT_BRANCH
 }
@@ -213,6 +215,19 @@ function update_news {
 	msg_info -n "Updating NEWS: "
 	sed -i "s/^?? ???/$1/g" NEWS
 	msg_success "done!"
+}
+
+function verify_changes {
+	msg_info "Verify Changes"
+	git diff
+	msg_info -n "Does everything look good? [y/N]: "
+	read VERIFY_CHANGES
+	VERIFY_CHANGES=$(echo $VERIFY_CHANGES | tr "[:upper:]" "[:lower:]")
+	if [[ -z $VERIFY_CHANGES || $VERIFY_CHANGES == n* ]]
+	then
+		msg_error "Bailing out..."
+		exit -1
+	fi
 }
 
 function commit_updates {
