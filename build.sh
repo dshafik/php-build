@@ -170,8 +170,17 @@ function clone_php {
 }
 
 function find_branch {
-	local VERSION=$(echo $1 | cut -c 1-3)
-	BRANCH_DEFAULT="PHP-$VERSION"
+	# Check if on release branch
+	git branch -a | grep -q "remotes/origin/PHP-$1$"
+	if [[ $? -eq 0 ]]
+	then
+		msg_warn "Found existing release branch: PHP-$1"
+		BRANCH_DEFAULT="PHP-$1"
+	else
+		local VERSION=$(echo $1 | cut -c 1-3)
+		BRANCH_DEFAULT="PHP-$VERSION"
+	fi
+
 	git branch -a | grep -q "remotes/origin/$BRANCH_DEFAULT$"
 	if [[ $? -ne 0 ]]
 	then
@@ -218,9 +227,16 @@ function get_version {
 }
 
 function create_release_branch {
-	msg_info "Creating release branch PHP-$1"
 	RELEASE_BRANCH="PHP-$1"
-	git checkout -b $RELEASE_BRANCH
+
+	local CURRENT_BRANCH=$(git symbolic-ref -q HEAD | grep $RELEASE_BRANCH$)
+	if [[ $? -ne 0 ]]
+	then
+		msg_info "Creating release branch PHP-$1"
+		git checkout -b $RELEASE_BRANCH
+	else
+		msg_info "Already on release branch PHP-$1"
+	fi
 }
 
 function update_version {
@@ -310,8 +326,10 @@ function tag_release {
 }
 
 function push_branches {
+	local UNIQUE_REFS=$(echo $@ | tr ' ' '\n' | sort -u | tr '\n' ' ')
+
 	msg_info -n "Pushing branches: "
-	git push origin $@
+	git push origin $UNIQUE_REFS
 	msg_warn "Skipping"
 }
 
