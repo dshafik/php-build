@@ -8,7 +8,7 @@ This container is currently based on `debian:jessie`.
 
 It will do the following:
 
-- Ask for various inputs
+- Ask for inputs
   - Build version
   - Build date (for NEWS file)
   - Committer name & email
@@ -25,6 +25,13 @@ It will do the following:
 - Create the packages
 - Generate GPG signatures & MD5 checksums
 - Copy the resulting files to the docker host
+
+## Features
+
+- Repeatable, system independent builds
+- Configuration file for quicker/easier builds
+- Ability to rebuild using release branch
+- Change verification
 
 ## Running the Container
 
@@ -45,11 +52,20 @@ docker run -it --rm -v$HOME/.ssh:/secure/.ssh -v$HOME/.gnupg:/secure/.gnupg -v$P
 
 This will pull the image from hub.docker.com and run it.
 
+## Configuration File
+
+To use a configuration file, copy `config.env.default` to `config.env` and make appropriate changes. Then rebuild the container as per below.
+
+The configuration file will provide defaults to input questions, allowing you to customize on each build if necessary.
+
 ## Building the Container
 
-If you want to build the container yourself, you can easily do so using the following command:
+If you want to build the container yourself, first make sure you create a `config.env` file (see above).
+
+You can then rebuild using the following command:
 
 ```sh
 docker build -t $USER/php-build .
 ```
 
+To use your build, call the `docker run` command above with `$USER/php-build` rather than `dshafik/php-build`
