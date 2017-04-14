@@ -144,9 +144,15 @@ function check_ssh_key {
 function check_gpg {
 	if [ ! -f "/secure/.gnupg/pubring.gpg" ]
 	then
-		msg_error "GPG Keys Not Found. Did you mount it?"
-		msg_info "Try running docker with:"
-		msg_info "-v\$HOME/.gnupg:/secure/.gnupg"
+		if [ -f "/secure/.gnupg/pubring.kbx" ]
+		then
+			msg_error "GPGv2 pubring found, but not GPGv1"
+			msg_info "Debian 8 only support GPGv1 keys"
+		else
+			msg_error "GPG Keys Not Found. Did you mount it?"
+			msg_info "Try running docker with:"
+			msg_info "-v\$HOME/.gnupg:/secure/.gnupg"
+		fi
 		exit -1
 	fi
 

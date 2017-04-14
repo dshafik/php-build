@@ -69,3 +69,13 @@ docker build -t $USER/php-build .
 ```
 
 To use your build, call the `docker run` command above with `$USER/php-build` rather than `dshafik/php-build`
+
+## GnuPG version 2.1
+
+GnuPG >= 2.1 use a key format which is incompatable with earlier versions
+and appears to be incapable of downgrading gpg2.1 keys.
+Meanwhile, Debian 8 happens to ship with GnuPG 1.4,
+so you may need to create a new key.
+
+Check for ~/.gnupg/{pub,sec}ring.gpg to determine if
+you have a GnuPG v1 key available.
