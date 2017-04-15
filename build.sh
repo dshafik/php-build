@@ -44,7 +44,6 @@ function run {
 	compare_version "$VERSION"
 
 	tag_release "$GPG_KEY" "$VERSION"
-	push_branches "$ROOT_BRANCH" "$RELEASE_BRANCH" "$TAG_NAME"
 
 	make_dist "$VERSION"
 
@@ -59,7 +58,7 @@ function run {
 	update_news_next_ver "$ROOT_BRANCH" "$DATE" "$NEXT_VERSION"
 	verify_changes
 	commit_news_next_ver "$NEXT_VERSION"
-	push_branches "$ROOT_BRANCH"
+	push_branches "$ROOT_BRANCH" "$RELEASE_BRANCH" "$TAG_NAME"
 }
 
 function read_with_default {
