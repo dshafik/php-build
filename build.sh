@@ -10,6 +10,8 @@ then
 fi
 
 function run {
+	check_dryrun
+
 	read_version
 	read_date
 	read_committer
@@ -58,6 +60,7 @@ function run {
 	update_news_next_ver "$ROOT_BRANCH" "$DATE" "$NEXT_VERSION"
 	verify_changes
 	commit_news_next_ver "$NEXT_VERSION"
+
 	push_branches "$ROOT_BRANCH" "$RELEASE_BRANCH" "$TAG_NAME"
 }
 
@@ -94,6 +97,13 @@ function read_yesno {
 	else
 		msg_error "Invalid response: $READ_VALUE"
 		exit -1
+	fi
+}
+
+function check_dryrun {
+	if [[ ! -z "$DRY_RUN" ]]
+	then
+		msg_warn "Performing a dry run, changes will not be pushed"
 	fi
 }
 
@@ -345,11 +355,16 @@ function tag_release {
 }
 
 function push_branches {
-	local UNIQUE_REFS=$(echo $@ | tr ' ' '\n' | sort -u | tr '\n' ' ')
+	if [[ -z "$DRY_RUN" ]]
+	then
+		local UNIQUE_REFS=$(echo $@ | tr ' ' '\n' | sort -u | tr '\n' ' ')
 
-	msg_info -n "Pushing branches: "
-	git push origin $UNIQUE_REFS
-	msg_warn "Skipping"
+		msg_info -n "Pushing branches: "
+		git push origin $UNIQUE_REFS
+	else
+		msg_warn "Skipping push"
+		msg_info "Would push $UNIQUE_REFS"
+	fi
 }
 
 function make_dist {
