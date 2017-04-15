@@ -17,54 +17,54 @@ function run {
 	read_ssh_key
 
 	msg_success "Building Version: $VERSION"
-	set_committer "$COMMITTER_NAME" $COMMITTER_EMAIL
+	set_committer "$COMMITTER_NAME" "$COMMITTER_EMAIL"
 	check_date "$DATE"
-	check_gpg $GPG_KEY
-	check_ssh_key $SSH_KEY
+	check_gpg "$GPG_KEY"
+	check_ssh_key "$SSH_KEY"
 
 	clone_php
 
-	find_branch $VERSION
+	find_branch "$VERSION"
 	# This function call creates VERSION_* variables
-	get_version $VERSION
+	get_version "$VERSION"
 
-	create_release_branch $VERSION
+	create_release_branch "$VERSION"
 
 	update_version \
-		$VERSION_MAJOR $VERSION_MINOR $VERSION_MICRO \
-		$VERSION_EXTRA $VERSION_EXTRA_VERSION $VERSION_ID
+		"$VERSION_MAJOR" "$VERSION_MINOR" "$VERSION_MICRO" \
+		"$VERSION_EXTRA" "$VERSION_EXTRA_VERSION" "$VERSION_ID"
 	update_news "$DATE"
 	verify_changes
-	commit_updates $VERSION
+	commit_updates "$VERSION"
 
 	compile_php
 	run_tests
 
 	# We do this after the tests so it is more visible
-	compare_version $VERSION
+	compare_version "$VERSION"
 
-	tag_release $GPG_KEY $VERSION
-	push_branches $ROOT_BRANCH $RELEASE_BRANCH $TAG_NAME
+	tag_release "$GPG_KEY" "$VERSION"
+	push_branches "$ROOT_BRANCH" "$RELEASE_BRANCH" "$TAG_NAME"
 
-	make_dist $VERSION
+	make_dist "$VERSION"
 
-	gen_verify_stub $VERSION
-	gen_md5_stub $VERSION
+	gen_verify_stub "$VERSION"
+	gen_md5_stub "$VERSION"
 
-	move_files $VERSION
+	move_files "$VERSION"
 
-	msg_success "Build completed for php-$VERSION!"
+	msg_success "Build completed for php-${VERSION}!"
 
 	read_next_ver
-	update_news_next_ver $ROOT_BRANCH "$DATE" $NEXT_VERSION
+	update_news_next_ver "$ROOT_BRANCH" "$DATE" "$NEXT_VERSION"
 	verify_changes
-	commit_news_next_ver $NEXT_VERSION
-	push_branches $ROOT_BRANCH
+	commit_news_next_ver "$NEXT_VERSION"
+	push_branches "$ROOT_BRANCH"
 }
 
 function read_with_default {
 	msg -n "$2"
-	if [[ ! -z $3 ]]
+	if [[ ! -z "$3" ]]
 	then
 		msg -n " [$3]"
 	fi
@@ -72,9 +72,9 @@ function read_with_default {
 
 	read READ_VALUE
 
-	if [[ -z $READ_VALUE ]]
+	if [[ -z "$READ_VALUE" ]]
 	then
-		READ_VALUE=$3
+		READ_VALUE="$3"
 	fi
 
 	local __RESULT_VAR=$1
@@ -97,7 +97,7 @@ function read_committer {
 }
 
 function read_gpg {
-	read_with_default GPG_KEY "GPG Key Fingerprint" $GPG_KEY
+	read_with_default GPG_KEY "GPG Key Fingerprint" "$GPG_KEY"
 }
 
 function read_ssh_key {
@@ -165,7 +165,7 @@ function clone_php {
 		REPO_URL="git@git.php.net:php-src.git"
 	fi
 	msg_info "Using repo: $REPO_URL"
-	git clone $REPO_URL
+	git clone "$REPO_URL"
 	cd php-src
 }
 
@@ -189,7 +189,7 @@ function find_branch {
 
 	read_with_default USE_BRANCH_DEFAULT "Which branch should be used to build from?" "$BRANCH_DEFAULT"
 
-	if [[ -z $USE_BRANCH_DEFAULT ]]
+	if [[ -z "$USE_BRANCH_DEFAULT" ]]
 	then
 		USE_BRANCH_DEFAULT=BRANCH_DEFAULT
 	fi
@@ -202,10 +202,10 @@ function find_branch {
 		exit -1
 	fi
 
-	ROOT_BRANCH=$USE_BRANCH_DEFAULT
+	ROOT_BRANCH="$USE_BRANCH_DEFAULT"
 
 	msg_success "Switching to branch $ROOT_BRANCH: "
-	git checkout $ROOT_BRANCH
+	git checkout "$ROOT_BRANCH"
 }
 
 function get_version {
@@ -233,7 +233,7 @@ function create_release_branch {
 	if [[ $? -ne 0 ]]
 	then
 		msg_info "Creating release branch PHP-$1"
-		git checkout -b $RELEASE_BRANCH
+		git checkout -b "$RELEASE_BRANCH"
 	else
 		msg_info "Already on release branch PHP-$1"
 	fi
@@ -278,7 +278,7 @@ function verify_changes {
 	msg_info -n "Does everything look good? [y/N]: "
 	read VERIFY_CHANGES
 	VERIFY_CHANGES=$(echo $VERIFY_CHANGES | tr "[:upper:]" "[:lower:]")
-	if [[ -z $VERIFY_CHANGES || $VERIFY_CHANGES == n* ]]
+	if [[ -z "$VERIFY_CHANGES" || "$VERIFY_CHANGES" == n* ]]
 	then
 		msg_error "Bailing out..."
 		exit -1
@@ -301,8 +301,8 @@ function run_tests {
 	./sapi/cli/php run-tests.php -p `pwd`/sapi/cli/php -g "FAIL,XFAIL,BORK,WARN,LEAK,SKIP" --offline --show-diff --set-timeout 120
 	msg_info -n "Does the output look good? [y/N] "
 	read LOOKS_GOOD
-	LOOKS_GOOD=$(echo $LOOKS_GOOD | tr "[:upper:]" "[:lower:]")
-	if [[ -z $LOOKS_GOOD || $LOOKS_GOOD == n* ]]
+	LOOKS_GOOD=$(echo "$LOOKS_GOOD" | tr "[:upper:]" "[:lower:]")
+	if [[ -z "$LOOKS_GOOD" || "$LOOKS_GOOD" == n* ]]
 	then
 		msg_error "Bailing out..."
 		exit -1
@@ -311,7 +311,7 @@ function run_tests {
 
 function compare_version {
 	BUILD_VERSION=$(./sapi/cli/php -n -v | head -n 1 | cut -d " " -f 2)
-	if [[ $BUILD_VERSION != $1 ]]
+	if [[ "$BUILD_VERSION" != "$1" ]]
 	then
 		msg_error "Build version \"$BUILD_VERSION\" doesn't match \"$1\""
 		exit 1
@@ -342,7 +342,7 @@ function push_branches {
 
 function make_dist {
 	msg_info -n "Creating packages: "
-	PHPROOT=. ./makedist $1
+	PHPROOT=. ./makedist "$1"
 	if [[ $? -ne 0 ]]
 	then
 		msg_error "failed!"
@@ -354,17 +354,17 @@ function make_dist {
 
 function gen_verify_stub {
 	msg_info "Generating GPG Signatures:"
-	./scripts/dev/gen_verify_stub $1
+	./scripts/dev/gen_verify_stub "$1"
 }
 
 function gen_md5_stub {
 	msg_info "Generating MD5 Signatures:"
-	md5sum php-$1.tar* | grep -v asc
+	md5sum "php-$1.tar"* | grep -v asc
 }
 
 function move_files {
 	msg_info -n "Copying packages and signatures: "
-	cp -R php-$1.tar.* /php-build
+	cp -R "php-$1.tar."* /php-build
 	msg_info "done"
 }
 
