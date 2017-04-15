@@ -81,6 +81,23 @@ function read_with_default {
 	eval $__RESULT_VAR="'$READ_VALUE'"
 }
 
+function read_yesno {
+	read_with_default READ_VALUE "$2 (y/n)" ${3:-no}
+	READ_VALUE=$(echo $READ_VALUE | tr "[:upper:]" "[:lower:]")
+
+	local __RESULT_VAR=$1
+	if [[ "$READ_VALUE" == n* ]]
+	then
+		eval $__RESULT_VAR="no"
+	elif [[ "$READ_VALUE" == y* ]]
+	then
+		eval $__RESULT_VAR="yes"
+	else
+		msg_error "Invalid response: $READ_VALUE"
+		exit -1
+	fi
+}
+
 function read_version {
 	msg -n "PHP Version to build (e.g. 7.1.0beta2): "
 	read VERSION
@@ -275,10 +292,8 @@ function update_news {
 function verify_changes {
 	msg_info "Verify Changes"
 	git diff
-	msg_info -n "Does everything look good? [y/N]: "
-	read VERIFY_CHANGES
-	VERIFY_CHANGES=$(echo $VERIFY_CHANGES | tr "[:upper:]" "[:lower:]")
-	if [[ -z "$VERIFY_CHANGES" || "$VERIFY_CHANGES" == n* ]]
+	read_yesno VERIFY_CHANGES "Does everything look good" "no"
+	if [[ "$VERIFY_CHANGES" = "no" ]]
 	then
 		msg_error "Bailing out..."
 		exit -1
@@ -299,10 +314,8 @@ function run_tests {
 	msg_info "Running Tests"
 	sleep 3
 	./sapi/cli/php run-tests.php -p `pwd`/sapi/cli/php -g "FAIL,XFAIL,BORK,WARN,LEAK,SKIP" --offline --show-diff --set-timeout 120
-	msg_info -n "Does the output look good? [y/N] "
-	read LOOKS_GOOD
-	LOOKS_GOOD=$(echo "$LOOKS_GOOD" | tr "[:upper:]" "[:lower:]")
-	if [[ -z "$LOOKS_GOOD" || "$LOOKS_GOOD" == n* ]]
+	read_yesno LOOKS_GOOD "Does the output look good" "no"
+	if [[ "$LOOKS_GOOD" = "no" ]]
 	then
 		msg_error "Bailing out..."
 		exit -1
