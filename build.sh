@@ -9,6 +9,11 @@ then
 	source /config.env
 fi
 
+if [[ -f /secure/config.env ]]
+then
+	source /secure/config.env
+fi
+
 function run {
 	check_dryrun
 
