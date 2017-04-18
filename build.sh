@@ -4,15 +4,12 @@ function ctrl_c() {
 	exit -2
 }
 
-if [[ -f /config.env ]]
+if [[ ! -f /secure/config.env ]]
 then
-	source /config.env
+	echo "Missing /secure/config.env"
+	exit -1
 fi
-
-if [[ -f /secure/config.env ]]
-then
-	source /secure/config.env
-fi
+source /secure/config.env
 
 function run {
 	check_dryrun
