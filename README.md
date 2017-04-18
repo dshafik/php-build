@@ -38,31 +38,29 @@ It will do the following:
 **You must run this container interactively.** In addition to the above inputs you will be asked for your
 ssh key passphrase, and your gpg key passphrase numerous times.
 
-You need to mount three host directories into the container at the following mount points:
+You need to mount three host directories and one file into the container at the following mount points:
 
 1. `/secure/.ssh`: A directory containing the SSH key you need for git access
 2. `/secure/.gnupg`: A directory containing your GPG keys
-3. `/php-build`: A directory where the resulting packages/signatures will be saved
+3. `/secure/config.env`: Your build configuration settings, use `config.env.default` as a template
+4. `/php-build`: A directory where the resulting packages/signatures will be saved
 
 As an example, to run it using the default locations for SSH keys, and GPG keys:
 
 ```sh
-docker run -it --rm -v$HOME/.ssh:/secure/.ssh -v$HOME/.gnupg:/secure/.gnupg -v$PWD:/php-build dshafik/php-build
+docker run -it --rm \
+  -v$HOME/.ssh:/secure/.ssh \
+  -v$HOME/.gnupg:/secure/.gnupg \
+  -v$HOME/.php/config.env:/secure/config.env \
+  -v$PWD:/php-build \
+  dshafik/php-build
 ```
 
 This will pull the image from hub.docker.com and run it.
 
-## Configuration File
-
-To use a configuration file, copy `config.env.default` to `config.env` and make appropriate changes. Then rebuild the container as per below.
-
-The configuration file will provide defaults to input questions, allowing you to customize on each build if necessary.
-
 ## Building the Container
 
-If you want to build the container yourself, first make sure you create a `config.env` file (see above).
-
-You can then rebuild using the following command:
+If you want to build the container yourself, you can rebuild using the following command:
 
 ```sh
 docker build -t $USER/php-build .
